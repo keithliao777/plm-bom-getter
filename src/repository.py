@@ -209,15 +209,12 @@ class PLMRepository:
         time.sleep(self.config.page_load_wait)
         self.driver.switch_to.default_content()
 
-        # 选择"多层"选项
+        # 选择"多层"选项 (index 0)
+        # 注意：页面可能已经记住了上次的选择状态
         self.driver.execute_script("""
             var radios = document.querySelectorAll('.ant-radio-wrapper');
-            for (var i = 0; i < radios.length; i++) {
-                var text = radios[i].innerText || radios[i].textContent || '';
-                if (text.includes('多层')) {
-                    radios[i].click();
-                    return;
-                }
+            if (radios.length > 0 && !radios[0].classList.contains('ant-radio-wrapper-checked')) {
+                radios[0].click();
             }
         """)
         time.sleep(1)
@@ -227,7 +224,7 @@ class PLMRepository:
             var assoc = document.querySelector('.wea-associative-search .ant-select');
             if (assoc) assoc.click();
         """)
-        time.sleep(1)
+        time.sleep(2)
 
         # 输入物料号
         self._input_text(material_number)

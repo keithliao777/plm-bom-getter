@@ -1,0 +1,7 @@
+# PLM BOM Getter Dependencies
+selenium==4.41.0
+pandas==2.2.3
+openpyxl==3.1.5
+
+# Development Dependencies
+pytest==9.0.2

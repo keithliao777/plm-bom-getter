@@ -84,7 +84,7 @@ def cmd_search_bom(args) -> int:
 
 
 def cmd_full_search(args) -> int:
-    """完整搜索（产品+BOM）"""
+    """完整搜索（产品+所有BOM）"""
     service = create_service()
 
     try:
@@ -93,32 +93,24 @@ def cmd_full_search(args) -> int:
         print(f"已连接")
 
         print(f"\n搜索客户型号: {args.customer_model}")
-        product_result, bom_result = service.search_products_and_bom(args.customer_model)
+        result = service.search_all_boms(args.customer_model)
 
-        if product_result.success:
-            print(f"\n产品搜索成功！找到 {product_result.total_rows} 条数据")
+        if result['success']:
+            print(f"\n产品搜索成功！找到 {result['total_products']} 个成品料号")
             print(f"\n成品料号:")
-            for row in product_result.data:
-                print(f"  {row[0]}")
+            for pn in result['part_numbers']:
+                print(f"  {pn}")
 
-            if product_result.files:
-                print(f"\n产品文件已保存:")
-                for key, path in product_result.files.items():
+            print(f"\nBOM 查询完成！共获取 {result['total_bom_rows']} 条 BOM 数据")
+
+            if result['files']:
+                print(f"\n已保存文件:")
+                for key, path in result['files'].items():
                     print(f"  {key}: {path}")
-
-        if bom_result and bom_result.success:
-            print(f"\nBOM 查询成功！找到 {bom_result.total_rows} 条数据")
-
-            if bom_result.files:
-                print(f"\nBOM 文件已保存:")
-                for key, path in bom_result.files.items():
-                    print(f"  {key}: {path}")
-
-        if not product_result.success:
-            print(f"\n产品搜索失败: {product_result.error}")
+            return 0
+        else:
+            print(f"\n搜索失败")
             return 1
-
-        return 0
 
     except Exception as e:
         print(f"错误: {e}")

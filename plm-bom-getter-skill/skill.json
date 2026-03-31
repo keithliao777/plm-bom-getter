@@ -1,0 +1,76 @@
+{
+  "name": "plm-bom-getter",
+  "description": "从 PLM 系统获取 BOM 数据 - 通过客户型号搜索成品料号，按料号查询完整多层 BOM",
+  "version": "1.0.0",
+  "metadata": {
+    "openclaw": {
+      "requires": {
+        "env": {
+          "CHROME_DEBUG_PORT": "9222"
+        },
+        "os": ["windows", "linux"],
+        "bins": ["python3", "node"]
+      },
+      "user-invocable": true,
+      "command-dispatch": {
+        "search-products": "按客户型号搜索成品料号",
+        "search-bom": "按成品料号查询 BOM",
+        "full-search": "搜索产品并获取所有 BOM"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "read:./src/**",
+      "read:./tests/**",
+      "read:./data/**",
+      "read:./output/**",
+      "write:./output/**",
+      "bash:python3",
+      "bash:node"
+    ],
+    "deny": [
+      "read:~/**",
+      "read:.env",
+      "read:**/node_modules/**",
+      "read:**/.ssh/**",
+      "write:**/node_modules/**",
+      "bash:rm",
+      "bash:del",
+      "bash:powershell"
+    ]
+  },
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": ["search-products", "search-bom", "full-search"],
+        "description": "操作类型"
+      },
+      "customer_model": {
+        "type": "string",
+        "description": "客户型号 (如 N3D, NW4, NC20)"
+      },
+      "material_number": {
+        "type": "string",
+        "description": "成品料号 (如 30008018)"
+      }
+    },
+    "required": ["action"]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean"
+      },
+      "data": {
+        "type": "object"
+      },
+      "error": {
+        "type": "string"
+      }
+    }
+  }
+}

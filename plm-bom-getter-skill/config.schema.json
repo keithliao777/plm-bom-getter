@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PLM BOM Getter Configuration",
+  "type": "object",
+  "properties": {
+    "chrome_debug_port": {
+      "type": "number",
+      "default": 9222,
+      "description": "Chrome 远程调试端口"
+    },
+    "chromedriver_path": {
+      "type": "string",
+      "default": "C:/Users/keith liao/.cache/selenium/chromedriver/win64/146.0.7680.165/chromedriver.exe",
+      "description": "ChromeDriver 路径"
+    },
+    "plm_base_url": {
+      "type": "string",
+      "default": "http://oa.netcoretec.com/wui/index.html",
+      "description": "PLM 系统基础 URL"
+    },
+    "output_dir": {
+      "type": "string",
+      "default": "C:/Users/keith liao/.openclaw/plm-exports",
+      "description": "输出文件目录"
+    },
+    "page_load_wait": {
+      "type": "number",
+      "default": 8,
+      "description": "页面加载等待时间（秒）"
+    },
+    "search_wait": {
+      "type": "number",
+      "default": 10,
+      "description": "搜索等待时间（秒）"
+    }
+  },
+  "required": []
+}

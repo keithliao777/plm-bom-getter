@@ -185,10 +185,33 @@ class PLMRepository:
         # 输入客户型号
         self._input_text(customer_model)
 
-        # 等待3秒
-        time.sleep(3)
+        # 等待下拉菜单出现
+        time.sleep(2)
 
-        # 按回车
+        # 在下拉菜单中选择精确匹配的选项
+        selected = self.driver.execute_script("""
+            var dropdown = document.querySelector('.ant-select-dropdown');
+            if (!dropdown) return false;
+
+            var items = dropdown.querySelectorAll('.ant-select-dropdown-menu-item');
+            for (var i = 0; i < items.length; i++) {
+                var text = items[i].innerText.trim();
+                // 精确匹配客户型号
+                if (text === arguments[0]) {
+                    items[i].click();
+                    return true;
+                }
+            }
+            return false;
+        """, customer_model)
+
+        if not selected:
+            # 如果没有精确匹配，按回车让系统自动选择
+            print(f"警告: 未找到精确匹配 '{customer_model}' 的选项，使用回车")
+
+        time.sleep(2)
+
+        # 按回车确认
         try:
             search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
         except Exception:

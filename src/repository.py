@@ -99,17 +99,23 @@ class PLMRepository:
         if not self.driver:
             raise ChromeConnectionError("未连接到 Chrome")
 
-        self.driver.execute_script("""
+        clicked = self.driver.execute_script("""
             var labels = document.querySelectorAll('.cube-quicksearch-label');
             if (labels.length >= 6) {
                 var label = labels[5];
                 var container = label.closest('div[style*=inline-block]');
                 if (container) {
                     var antSelect = container.querySelector('.ant-select');
-                    if (antSelect) antSelect.click();
+                    if (antSelect) {
+                        antSelect.click();
+                        return true;
+                    }
                 }
             }
+            return false;
         """)
+        if not clicked:
+            raise ElementNotFoundError("未找到客标型号输入框")
         time.sleep(1.5)
 
     def _clear_input(self) -> None:
@@ -137,7 +143,11 @@ class PLMRepository:
         if not self.driver:
             raise ChromeConnectionError("未连接到 Chrome")
 
-        search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
+        try:
+            search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
+        except Exception:
+            raise ElementNotFoundError("未找到搜索输入框 .ant-select-search__field")
+
         search_input.click()
         time.sleep(0.3)
         search_input.send_keys(Keys.CONTROL, 'a')
@@ -179,7 +189,10 @@ class PLMRepository:
         time.sleep(3)
 
         # 按回车
-        search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
+        try:
+            search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
+        except Exception:
+            raise ElementNotFoundError("未找到搜索输入框")
         search_input.send_keys(Keys.RETURN)
 
         # 等待搜索结果
@@ -211,19 +224,28 @@ class PLMRepository:
 
         # 选择"多层"选项 (index 0)
         # 注意：页面可能已经记住了上次的选择状态
-        self.driver.execute_script("""
+        radios_count = self.driver.execute_script("""
             var radios = document.querySelectorAll('.ant-radio-wrapper');
             if (radios.length > 0 && !radios[0].classList.contains('ant-radio-wrapper-checked')) {
                 radios[0].click();
             }
+            return radios.length;
         """)
+        if radios_count == 0:
+            raise ElementNotFoundError("未找到层级选项 radio")
         time.sleep(1)
 
         # 点击父阶料号输入框
-        self.driver.execute_script("""
+        clicked = self.driver.execute_script("""
             var assoc = document.querySelector('.wea-associative-search .ant-select');
-            if (assoc) assoc.click();
+            if (assoc) {
+                assoc.click();
+                return true;
+            }
+            return false;
         """)
+        if not clicked:
+            raise ElementNotFoundError("未找到父阶料号输入框")
         time.sleep(2)
 
         # 输入物料号
@@ -233,7 +255,10 @@ class PLMRepository:
         time.sleep(3)
 
         # 按回车
-        search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
+        try:
+            search_input = self.driver.find_element(By.CSS_SELECTOR, ".ant-select-search__field")
+        except Exception:
+            raise ElementNotFoundError("未找到搜索输入框")
         search_input.send_keys(Keys.RETURN)
 
         # 等待搜索结果

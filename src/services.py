@@ -153,7 +153,7 @@ class PLMBomService:
 
     def search_products_and_bom(self, customer_model: str) -> tuple[ProductSearchResult, Optional[BomSearchResult]]:
         """
-        按客户型号搜索并查询其BOM
+        按客户型号搜索并查询其BOM（仅第一个料号）
 
         Args:
             customer_model: 客户型号
@@ -171,3 +171,66 @@ class PLMBomService:
         bom_result = self.search_bom(first_material)
 
         return product_result, bom_result
+
+    def search_all_boms(self, customer_model: str) -> dict:
+        """
+        按客户型号搜索并获取所有成品料号的BOM
+
+        Args:
+            customer_model: 客户型号
+
+        Returns:
+            dict: 包含产品搜索结果和所有BOM数据
+        """
+        # 搜索产品
+        product_result = self.search_products(customer_model)
+        if not product_result.success or product_result.total_rows == 0:
+            return {
+                'success': True,
+                'customer_model': customer_model,
+                'total_products': 0,
+                'products': [],
+                'boms': [],
+                'total_bom_rows': 0,
+                'files': product_result.files
+            }
+
+        # 获取所有成品料号
+        part_numbers = [row[0] for row in product_result.data]
+
+        # 查询所有BOM
+        boms = []
+        total_bom_rows = 0
+        bom_files = {}
+
+        for pn in part_numbers:
+            try:
+                bom_result = self.search_bom(pn)
+                if bom_result.success:
+                    boms.append({
+                        'material_number': bom_result.material_number,
+                        'total_rows': bom_result.total_rows,
+                        'header': bom_result.header,
+                        'data': bom_result.data
+                    })
+                    total_bom_rows += bom_result.total_rows
+                    if bom_result.files:
+                        bom_files.update(bom_result.files)
+            except Exception as e:
+                # 单个BOM查询失败不影响整体
+                print(f"警告: BOM查询失败 {pn}: {e}")
+
+        return {
+            'success': True,
+            'customer_model': customer_model,
+            'total_products': len(part_numbers),
+            'part_numbers': part_numbers,
+            'products': product_result.data,
+            'product_header': product_result.header,
+            'boms': boms,
+            'total_bom_rows': total_bom_rows,
+            'files': {
+                **product_result.files,
+                **bom_files
+            }
+        }

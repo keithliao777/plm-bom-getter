@@ -31,9 +31,17 @@ export interface BomSearchResult {
 
 export interface FullSearchResult {
   customer_model: string;
-  products: ProductSearchResult;
-  boms: BomSearchResult[];
+  total_products: number;
+  part_numbers: string[];
+  products: any[];
+  product_header: string[];
+  boms: any[];
   total_bom_rows: number;
+  files: {
+    products?: string;
+    part_numbers?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 export interface ExecutionResult {
@@ -162,29 +170,40 @@ print(json.dumps(output, ensure_ascii=False))
    * 完整搜索：搜索产品并获取所有 BOM
    */
   async fullSearch(customerModel: string): Promise<FullSearchResult> {
-    // 先搜索产品
-    const products = await this.searchProducts(customerModel);
+    const script = `
+import sys
+sys.path.insert(0, '..')
+from src.services import PLMBomService
+from src.config import Config
+import json
 
-    // 获取所有 BOM
-    const boms: BomSearchResult[] = [];
-    let totalBomRows = 0;
+config = Config()
+service = PLMBomService(config)
+service.connect()
 
-    for (const partNumber of products.part_numbers) {
-      try {
-        const bom = await this.searchBom(partNumber);
-        boms.push(bom);
-        totalBomRows += bom.total_rows;
-      } catch (error) {
-        // 单个 BOM 查询失败不影响整体
-        console.error(`BOM 查询失败 ${partNumber}:`, error);
-      }
+result = service.search_all_boms('${customerModel}')
+
+service.disconnect()
+print(json.dumps(result, ensure_ascii=False))
+`;
+
+    const result = await this.executePython(script);
+
+    if (!result.success) {
+      throw new Error(result.error);
     }
 
+    const data = JSON.parse(result.output);
+
     return {
-      customer_model: customerModel,
-      products,
-      boms,
-      total_bom_rows: totalBomRows
+      customer_model: data.customer_model,
+      total_products: data.total_products,
+      part_numbers: data.part_numbers,
+      products: data.products,
+      product_header: data.product_header,
+      boms: data.boms,
+      total_bom_rows: data.total_bom_rows,
+      files: data.files || {}
     };
   }
 
